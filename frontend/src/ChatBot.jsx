@@ -12,7 +12,7 @@ const Chatbot = () => {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/chat/history");
+        const response = await axios.get("http://localhost:3600/chat/history");
 
         if (response.data && response.data.length > 0) {
           // Format chat history properly
@@ -37,6 +37,47 @@ const Chatbot = () => {
     fetchHistory();
   }, []);
 
+  // const sendMessage = async (e) => {
+  //   e.preventDefault();
+  //   if (!input.trim()) return;
+
+  //   const userMessage = {
+  //     _id: Date.now() + "-user",
+  //     text: input,
+  //     sender: "user",
+  //   };
+  //   setMessages((prevMessages) => [...prevMessages, userMessage]); // Add user message
+  //   setInput("");
+  //   setIsLoading(true);
+
+  //   try {
+  //     const apiResponse = await axios.post("http://localhost:5000/chat", {
+  //       message: input,
+  //     });
+
+  //     const botResponse = {
+  //       _id: Date.now() + "-bot",
+  //       text:
+  //         apiResponse.data.choices?.[0]?.message?.content ||
+  //         "No response received.",
+  //       sender: "bot",
+  //     };
+
+  //     setMessages((prevMessages) => [...prevMessages, botResponse]); // Add bot response
+  //   } catch (error) {
+  //     setMessages((prevMessages) => [
+  //       ...prevMessages,
+  //       {
+  //         _id: Date.now() + "-error",
+  //         text: "Error: " + error.message,
+  //         sender: "bot",
+  //       },
+  //     ]);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -46,20 +87,22 @@ const Chatbot = () => {
       text: input,
       sender: "user",
     };
+
     setMessages((prevMessages) => [...prevMessages, userMessage]); // Add user message
     setInput("");
     setIsLoading(true);
 
     try {
-      const apiResponse = await axios.post("http://localhost:5000/chat", {
+      const apiResponse = await axios.post("http://localhost:3600/chat", {
         message: input,
       });
 
+      // Extract the bot's response correctly
+      const botText = apiResponse.data.bot || "No response received from AI.";
+
       const botResponse = {
         _id: Date.now() + "-bot",
-        text:
-          apiResponse.data.choices?.[0]?.message?.content ||
-          "No response received.",
+        text: botText,
         sender: "bot",
       };
 

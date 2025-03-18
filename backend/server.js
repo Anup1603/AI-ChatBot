@@ -13,22 +13,34 @@ app.use(express.urlencoded({ extended: true }));
 
 connectDB();
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+// const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 app.post('/chat', async (req, res) => {
     try {
         const { message } = req.body;
-        const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-            model: 'deepseek/deepseek-r1:free',
-            messages: [{ role: 'user', content: message }]
-        }, {
-            headers: {
-                'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json'
-            }
-        });
+        // const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+        //     model: 'deepseek/deepseek-r1:free',
+        //     messages: [{ role: 'user', content: message }]
+        // }, {
+        //     headers: {
+        //         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        //         'Content-Type': 'application/json'
+        //     }
+        // });
 
-        const botResponse = response.data.choices?.[0]?.message?.content || "No response received.";
+        const response = await axios.post(
+            `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                contents: [{ parts: [{ text: message }] }]
+            },
+            { headers: { 'Content-Type': 'application/json' } }
+        );
+
+        // const botResponse = response.data.choices?.[0]?.message?.content || "No response received.";
+
+        const botResponse = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "No response received.";
 
         // Save chat history to MongoDB
         const newChat = new Chat({
@@ -37,7 +49,7 @@ app.post('/chat', async (req, res) => {
         });
         await newChat.save();
 
-        res.json(response.data);
+        res.json({ user: message, bot: botResponse });
         // console.log(`User: ${message}\nBot: ${botResponse}`);
     } catch (error) {
         res.status(500).json({ error: 'Error fetching response from OpenRouter API' });
